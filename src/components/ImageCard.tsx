@@ -18,12 +18,7 @@ function ImageCard({ image, onTagClick, priority = false }: ImageCardProps) {
           alt={`Gallery image ${image.id}`}
           width={image.width}
           height={image.height}
-          style={{
-            width: "100%",
-            height: "auto",
-            objectFit: "contain",
-          }}
-          className="rounded-lg shadow-md hover:shadow-lg transition-shadow"
+          className="rounded-sm shadow-md hover:shadow-lg transition-shadow"
           unoptimized
           priority={priority}
         />
