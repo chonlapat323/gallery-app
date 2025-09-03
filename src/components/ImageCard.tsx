@@ -11,16 +11,18 @@ interface ImageCardProps {
 
 function ImageCard({ image, onTagClick, priority = false }: ImageCardProps) {
   return (
-    <div className="mb-4">
-      <div className="relative group">
+    <div className="mb-2">
+      <div className="relative group overflow-hidden rounded-lg">
         <Image
           src={image.imageUrl}
           alt={`Gallery image ${image.id}`}
           width={image.width}
           height={image.height}
-          className="rounded-sm shadow-md hover:shadow-lg transition-shadow"
+          className="w-full h-auto rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105"
           unoptimized
           priority={priority}
+          loading={priority ? "eager" : "lazy"}
+          sizes="(max-width: 500px) 100vw, (max-width: 700px) 50vw, (max-width: 1100px) 33vw, (max-width: 1400px) 25vw, 20vw"
         />
       </div>
 

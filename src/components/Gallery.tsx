@@ -26,20 +26,22 @@ export default function Gallery() {
       <Masonry
         breakpointCols={{
           default: 4,
+          1400: 4,
           1100: 3,
           700: 2,
           500: 1,
         }}
-        className="flex -ml-4 w-auto"
-        columnClassName="pl-4 bg-clip-padding"
+        className="flex -ml-2 w-auto"
+        columnClassName="pl-2 bg-clip-padding"
       >
         {filteredImages.map((image, index) => (
-          <ImageCard
-            key={image.id}
-            image={image}
-            onTagClick={toggleTag}
-            priority={true}
-          />
+          <div key={image.id} className="break-inside-avoid mb-2">
+            <ImageCard
+              image={image}
+              onTagClick={toggleTag}
+              priority={index < 10} // priority เฉพาะ 10 รูปแรก
+            />
+          </div>
         ))}
       </Masonry>
 
