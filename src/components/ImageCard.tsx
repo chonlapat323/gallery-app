@@ -27,7 +27,6 @@ function ImageCard({ image, onTagClick, priority = false }: ImageCardProps) {
           unoptimized
           priority={priority}
         />
-        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 rounded-lg" />
       </div>
 
       <div className="mt-2 flex flex-wrap gap-1">
