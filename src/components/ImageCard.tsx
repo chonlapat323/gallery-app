@@ -6,9 +6,10 @@ import { GalleryImage } from "@/types/gallery";
 interface ImageCardProps {
   image: GalleryImage;
   onTagClick: (tag: string) => void;
+  priority?: boolean;
 }
 
-function ImageCard({ image, onTagClick }: ImageCardProps) {
+function ImageCard({ image, onTagClick, priority = false }: ImageCardProps) {
   return (
     <div className="mb-4">
       <div className="relative group">
@@ -17,8 +18,14 @@ function ImageCard({ image, onTagClick }: ImageCardProps) {
           alt={`Gallery image ${image.id}`}
           width={image.width}
           height={image.height}
+          style={{
+            width: "100%",
+            height: "auto",
+            objectFit: "contain",
+          }}
           className="rounded-lg shadow-md hover:shadow-lg transition-shadow"
           unoptimized
+          priority={priority}
         />
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 rounded-lg" />
       </div>

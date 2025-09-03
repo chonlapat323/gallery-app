@@ -33,8 +33,13 @@ export default function Gallery() {
         className="flex -ml-4 w-auto"
         columnClassName="pl-4 bg-clip-padding"
       >
-        {filteredImages.map((image) => (
-          <ImageCard key={image.id} image={image} onTagClick={toggleTag} />
+        {filteredImages.map((image, index) => (
+          <ImageCard
+            key={image.id}
+            image={image}
+            onTagClick={toggleTag}
+            priority={true}
+          />
         ))}
       </Masonry>
 
