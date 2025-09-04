@@ -7,9 +7,15 @@ interface ImageCardProps {
   image: GalleryImage;
   onTagClick: (tag: string) => void;
   priority?: boolean;
+  onMeasure?: (height: number) => void;
 }
 
-function ImageCard({ image, onTagClick, priority = false }: ImageCardProps) {
+function ImageCard({
+  image,
+  onTagClick,
+  priority = false,
+  onMeasure,
+}: ImageCardProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -40,6 +46,22 @@ function ImageCard({ image, onTagClick, priority = false }: ImageCardProps) {
 
     return () => observer.disconnect();
   }, [priority]);
+
+  // Measure actual card height (image + tags) using ResizeObserver
+  useEffect(() => {
+    if (!cardRef.current || !onMeasure) return;
+    const el = cardRef.current;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const h = Math.round(entry.contentRect.height);
+        onMeasure(h);
+      }
+    });
+    observer.observe(el);
+    // initial measure
+    onMeasure(Math.round(el.getBoundingClientRect().height));
+    return () => observer.disconnect();
+  }, [onMeasure]);
 
   const handleImageLoad = () => {
     setIsLoaded(true);

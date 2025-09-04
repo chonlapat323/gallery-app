@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useGalleryStore } from "@/store/galleryStore";
-import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
+// import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import ImageCard from "./ImageCard";
 import { generateMockImages } from "@/app/data/galleryData";
 import { GalleryImage } from "@/types/gallery";
@@ -55,6 +55,13 @@ export default function Gallery() {
     );
   }, [allImages, selectedTags]);
 
+  // เมื่อเปลี่ยน filter ให้เลื่อนสกรอลล์กลับบนสุดเพื่อกันโหลดเพิ่มโดยไม่ตั้งใจ
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+    }
+  }, [selectedTags]);
+
   // incremental loading เหมือน PinGallery
   const [visibleItems, setVisibleItems] = useState(50);
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -78,7 +85,7 @@ export default function Gallery() {
     );
     observerRef.current.observe(loadMoreRef.current);
     return () => observerRef.current?.disconnect();
-  }, [loadMoreItems, hasNextPage, fetchNextPage]);
+  }, [loadMoreItems, hasNextPage, fetchNextPage, selectedTags]);
 
   // คอลัมน์ตามความสูงแบบ PinGallery
   const [columns, setColumns] = useState(4);
@@ -100,23 +107,11 @@ export default function Gallery() {
     [filteredImages, visibleItems]
   );
   // ---------------- Balance helpers ----------------
-  type BalanceMetrics = {
-    counts: number[];
-    heights: number[];
-    ratioCount: number;
-    ratioHeight: number;
-    okCount: boolean;
-    okHeight: boolean;
-  };
-
-  // include a simple overhead estimate (tags + paddings) so filtering doesn't skew height balance
-  const estimateExtraHeight = (img: GalleryImage) => {
-    const TAGS_PER_ROW_EST = 4;
-    const TAG_ROW_HEIGHT = 24;
-    const BASE_OVERHEAD = 32;
-    const rows = Math.ceil((img.hashtags?.length || 0) / TAGS_PER_ROW_EST);
-    return BASE_OVERHEAD + rows * TAG_ROW_HEIGHT;
-  };
+  // Measure-based layout: cache actual card heights
+  const [heightById, setHeightById] = useState<Record<string, number>>({});
+  const handleMeasure = useCallback((id: string, h: number) => {
+    setHeightById((prev) => (prev[id] === h ? prev : { ...prev, [id]: h }));
+  }, []);
 
   const distributeBalancedByCountFirst = (
     images: GalleryImage[],
@@ -143,7 +138,7 @@ export default function Gallery() {
     };
 
     for (const img of images) {
-      const estHeight = img.height + estimateExtraHeight(img);
+      const estHeight = heightById[img.id] ?? img.height;
       const target = pickTarget();
       cols[target].push({ ...img, estHeight });
       counts[target] += 1;
@@ -156,7 +151,7 @@ export default function Gallery() {
     const maxH = Math.max(...heights);
     const ratioCount = maxCount === 0 ? 1 : minCount / maxCount;
     const ratioHeight = maxH === 0 ? 1 : minH / maxH;
-    const metrics: BalanceMetrics = {
+    const metrics = {
       counts,
       heights,
       ratioCount,
@@ -169,7 +164,7 @@ export default function Gallery() {
 
   const { cols: columnArrays, metrics } = useMemo(() => {
     return distributeBalancedByCountFirst(visible, columns);
-  }, [visible, columns]);
+  }, [visible, columns, heightById, distributeBalancedByCountFirst]);
 
   // Track DOM counts for mismatch detection
   const columnRefs = useRef<HTMLDivElement[]>([]);
@@ -206,6 +201,7 @@ export default function Gallery() {
                   image={image}
                   onTagClick={toggleTag}
                   priority={i < 10}
+                  onMeasure={(h: number) => handleMeasure(image.id, h)}
                 />
               </div>
             ))}
