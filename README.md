@@ -39,13 +39,6 @@ Diagram: CI/CD (Auto‑deploy)
 
 ![CI/CD Auto‑deploy](public/Auto‑deploy.jpg)
 
-แนวปฏิบัติ Production โดยย่อ
-
-- Security: เปิด HTTPS (Let’s Encrypt), จำกัดพอร์ตให้เหลือ 80/443, ใช้ SSH key, อัปเดตแพตช์สม่ำเสมอ
-- Monitoring/Logs: ใช้ Logs ของ Coolify/Container
-
----
-
 ---
 
 ```bash
