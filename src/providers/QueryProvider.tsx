@@ -13,14 +13,9 @@ export default function QueryProvider({ children }: QueryProviderProps) {
         defaultOptions: {
           queries: {
             staleTime: 5 * 60 * 1000, // 5 นาที
-            cacheTime: 10 * 60 * 1000, // 10 นาที
+            gcTime: 10 * 60 * 1000, // 10 นาที
             retry: 1,
             refetchOnWindowFocus: false,
-          },
-          infiniteQueries: {
-            staleTime: 5 * 60 * 1000,
-            cacheTime: 10 * 60 * 1000,
-            maxPages: 3, // เก็บแค่ 3 หน้าล่าสุด
           },
         },
       })
