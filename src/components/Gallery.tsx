@@ -99,24 +99,107 @@ export default function Gallery() {
     () => filteredImages.slice(0, visibleItems),
     [filteredImages, visibleItems]
   );
+  // ---------------- Balance helpers ----------------
+  type BalanceMetrics = {
+    counts: number[];
+    heights: number[];
+    ratioCount: number;
+    ratioHeight: number;
+    okCount: boolean;
+    okHeight: boolean;
+  };
 
-  const columnArrays = useMemo(() => {
-    const cols: ColumnItem[][] = Array.from({ length: columns }, () => []);
-    const heights = new Array(columns).fill(0);
-    visible.forEach((img) => {
-      const estHeight = img.height; // ใช้ข้อมูล seeded height เดิม
-      const shortest = heights.indexOf(Math.min(...heights));
-      cols[shortest].push({ ...img, estHeight });
-      heights[shortest] += estHeight;
-    });
-    return cols;
+  // include a simple overhead estimate (tags + paddings) so filtering doesn't skew height balance
+  const estimateExtraHeight = (img: GalleryImage) => {
+    const TAGS_PER_ROW_EST = 4;
+    const TAG_ROW_HEIGHT = 24;
+    const BASE_OVERHEAD = 32;
+    const rows = Math.ceil((img.hashtags?.length || 0) / TAGS_PER_ROW_EST);
+    return BASE_OVERHEAD + rows * TAG_ROW_HEIGHT;
+  };
+
+  const distributeBalancedByCountFirst = (
+    images: GalleryImage[],
+    columnCount: number
+  ) => {
+    const cols: ColumnItem[][] = Array.from({ length: columnCount }, () => []);
+    const counts = new Array(columnCount).fill(0);
+    const heights = new Array(columnCount).fill(0);
+
+    const pickTarget = () => {
+      let idx = 0;
+      let minCount = Number.MAX_SAFE_INTEGER;
+      let minHeight = Number.MAX_SAFE_INTEGER;
+      for (let i = 0; i < columnCount; i++) {
+        const c = counts[i];
+        const h = heights[i];
+        if (c < minCount || (c === minCount && h < minHeight)) {
+          minCount = c;
+          minHeight = h;
+          idx = i;
+        }
+      }
+      return idx;
+    };
+
+    for (const img of images) {
+      const estHeight = img.height + estimateExtraHeight(img);
+      const target = pickTarget();
+      cols[target].push({ ...img, estHeight });
+      counts[target] += 1;
+      heights[target] += estHeight;
+    }
+
+    const minCount = Math.min(...counts);
+    const maxCount = Math.max(...counts);
+    const minH = Math.min(...heights);
+    const maxH = Math.max(...heights);
+    const ratioCount = maxCount === 0 ? 1 : minCount / maxCount;
+    const ratioHeight = maxH === 0 ? 1 : minH / maxH;
+    const metrics: BalanceMetrics = {
+      counts,
+      heights,
+      ratioCount,
+      ratioHeight,
+      okCount: ratioCount >= 0.8,
+      okHeight: ratioHeight >= 0.8,
+    };
+    return { cols, metrics };
+  };
+
+  const { cols: columnArrays, metrics } = useMemo(() => {
+    return distributeBalancedByCountFirst(visible, columns);
   }, [visible, columns]);
+
+  // Track DOM counts for mismatch detection
+  const columnRefs = useRef<HTMLDivElement[]>([]);
+  const [domCounts, setDomCounts] = useState<number[]>([]);
+  useEffect(() => {
+    const counts = columnRefs.current.map((el) =>
+      el ? el.children.length : 0
+    );
+    setDomCounts((prev) => {
+      if (
+        prev.length === counts.length &&
+        prev.every((v, i) => v === counts[i])
+      ) {
+        return prev;
+      }
+      return counts;
+    });
+  }, [columnArrays, columns]);
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {columnArrays.map((col, idx) => (
-          <div key={idx} className="flex flex-col gap-4">
+          <div
+            key={idx}
+            ref={(el) => {
+              columnRefs.current[idx] = el as HTMLDivElement;
+            }}
+            className="flex flex-col gap-4"
+          >
             {col.map((image, i) => (
               <div key={`${image.id}-${i}`} className="break-inside-avoid">
                 <ImageCard
@@ -137,6 +220,38 @@ export default function Gallery() {
       )}
 
       <div ref={loadMoreRef} className="h-10" />
+
+      {/* Balance overlay */}
+      <div className="fixed bottom-4 right-4 z-50 rounded-md border bg-white/90 px-3 py-2 text-xs shadow">
+        <div>Counts: [{metrics.counts.join(", ")}]</div>
+        <div>
+          Heights: [{metrics.heights.map((h) => Math.round(h)).join(", ")}]
+        </div>
+        <div>
+          RatioCount:{" "}
+          <span className={metrics.okCount ? "text-green-600" : "text-red-600"}>
+            {(metrics.ratioCount * 100).toFixed(0)}%
+          </span>{" "}
+          (&#8805; 80%)
+        </div>
+        <div>
+          RatioHeight:{" "}
+          <span
+            className={metrics.okHeight ? "text-green-600" : "text-red-600"}
+          >
+            {(metrics.ratioHeight * 100).toFixed(0)}%
+          </span>
+        </div>
+        <div>DOMCounts: [{domCounts.join(", ")}]</div>
+        {!metrics.okCount && (
+          <div className="text-red-600">Unbalanced by count (&lt; 80%)</div>
+        )}
+        {metrics.okCount &&
+          domCounts.length === metrics.counts.length &&
+          domCounts.some((n, i) => Math.abs(n - metrics.counts[i]) > 0) && (
+            <div className="text-red-600">Mismatch: logic vs DOM</div>
+          )}
+      </div>
     </div>
   );
 }
