@@ -217,37 +217,33 @@ export default function Gallery() {
 
       <div ref={loadMoreRef} className="h-10" />
 
-      {/* Balance overlay */}
-      <div className="fixed bottom-4 right-4 z-50 rounded-md border bg-white/90 px-3 py-2 text-xs shadow">
-        <div>Counts: [{metrics.counts.join(", ")}]</div>
-        <div>
-          Heights: [{metrics.heights.map((h) => Math.round(h)).join(", ")}]
+      {/* Balance overlay (hidden) */}
+      {false && (
+        <div className="fixed bottom-4 right-4 z-50 rounded-md border bg-white/90 px-3 py-2 text-xs shadow">
+          <div>Counts: [{metrics.counts.join(", ")}]</div>
+          <div>
+            Heights: [{metrics.heights.map((h) => Math.round(h)).join(", ")}]
+          </div>
+          <div>
+            RatioCount:{" "}
+            <span
+              className={metrics.okCount ? "text-green-600" : "text-red-600"}
+            >
+              {(metrics.ratioCount * 100).toFixed(0)}%
+            </span>{" "}
+            (&#8805; 80%)
+          </div>
+          <div>
+            RatioHeight:{" "}
+            <span
+              className={metrics.okHeight ? "text-green-600" : "text-red-600"}
+            >
+              {(metrics.ratioHeight * 100).toFixed(0)}%
+            </span>
+          </div>
+          <div>DOMCounts: [{domCounts.join(", ")}]</div>
         </div>
-        <div>
-          RatioCount:{" "}
-          <span className={metrics.okCount ? "text-green-600" : "text-red-600"}>
-            {(metrics.ratioCount * 100).toFixed(0)}%
-          </span>{" "}
-          (&#8805; 80%)
-        </div>
-        <div>
-          RatioHeight:{" "}
-          <span
-            className={metrics.okHeight ? "text-green-600" : "text-red-600"}
-          >
-            {(metrics.ratioHeight * 100).toFixed(0)}%
-          </span>
-        </div>
-        <div>DOMCounts: [{domCounts.join(", ")}]</div>
-        {!metrics.okCount && (
-          <div className="text-red-600">Unbalanced by count (&lt; 80%)</div>
-        )}
-        {metrics.okCount &&
-          domCounts.length === metrics.counts.length &&
-          domCounts.some((n, i) => Math.abs(n - metrics.counts[i]) > 0) && (
-            <div className="text-red-600">Mismatch: logic vs DOM</div>
-          )}
-      </div>
+      )}
     </div>
   );
 }
