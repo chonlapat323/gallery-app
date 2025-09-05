@@ -20,7 +20,7 @@ npm run dev
 
 สรุปสถาปัตยกรรมบน Production (ใช้ Coolify)
 
-- Server specifications (ของคุณ)
+- Server specifications
   - 2 vCPU / 4 GB RAM / 40 GB SSD
   - OS: Debian 12 (kernel 6.1.x) x86_64
 - Software/Stack
