@@ -14,7 +14,7 @@ npm run dev
 
 - `src/components/Gallery.tsx` กริดแบบ Masonry + infinite scroll
 - `src/components/ImageCard.tsx` วัดความสูงจริงของการ์ดด้วย ResizeObserver
-- `src/providers/QueryProvider.tsx` ตั้งค่า TanStack Query (staleTime / gcTime)
+- `src/providers/QueryProvider.tsx` ตั้งค่า TanStack Query (เช่น staleTime=5m, gcTime=10m) เพื่อจำลอง API และจัดการแคช/สถานะโหลด
 
 ---
 
